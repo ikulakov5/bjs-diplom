@@ -1,97 +1,132 @@
 class Profile {
-	constructor(user) {
-		this.username = user.username;
-		this.name = user.name;
-		this.password = user.pass;
-	}
+	constructor({ username, name: {firstName, lastName}, password }) {
+    this.username = username;
+    this.name = {
+        firstName, 
+        lastName
+        };
+    this.password = password;
+  	}
 
-	createUser(callback) {
-		console.log(`Creating user ${this.username}`);
-        return ApiConnector.createUser(this, (err, data) => {
+  	createUser(callback) {
+        return ApiConnector.createUser({username: this.username, name: this.name, password: this.password}, (err, data) => {
+              console.log(`Creating user ${this.username}.`);
+              callback(err, data);
+        });
+    }
+
+    login(callback) {
+        return ApiConnector.performLogin({username: this.username, password: this.password}, (err, data) => {
+            console.log(`Logining user ${this.username}`);
             callback(err, data);
         });
     }
 
-    login(user, callback) {
-		console.log(`Logining user ${this.username}`);
-        return ApiConnector.performLogin(user, (err, data) => {
-            callback(err, data);
-        });
-    }
-
-	addMoney({ currency, amount }, callback) {
-        console.log(`Adding ${amount} of ${currency} to ${this.username}`);
+    addMoney({currency, amount}, callback) {
         return ApiConnector.addMoney({ currency, amount }, (err, data) => {
-        	callback(err, data);
+            console.log(`Adding ${amount} of ${currency} to ${this.username}`);
+            callback(err, data);
         });
     }
 
-    convertMoney({ fromCurrency, targetCurrency, targetAmount }, callback) {
-        console.log(`Converting money`);
-        return ApiConnector.convertMoney({ fromCurrency, targetCurrency, targetAmount }, (err, data) => {
-        	callback(err, data);
+     convertMoney({fromCurrency, targetCurrency, targetAmount}, callback) {
+        return ApiConnector.convertMoney({fromCurrency, targetCurrency, targetAmount}, (err, data) => {
+            console.log(`Converting ${fromCurrency} to ${targetAmount} ${targetCurrency}`);
+            callback(err, data);
+        });
+    }
+
+    transferMoney({to, amount}, callback) {
+        return ApiConnector.transferMoney({to, amount}, (err, data) => {
+            console.log(`Transfering ${amount} Netcoins to ${to}`);
+            callback(err, data);
         });
     }
 }
 
-
-function Stocks() {
-	return ApiConnector.getStocks((err, data) => {
-        if (err) {
-                console.error('Error ');
-        } else {
-                console.log(`geted`);
-        }});
+function getStocks(callback) {
+    return ApiConnector.getStocks((err, data) => {
+    console.log(`Getting stocks`);
+    callback(err, data);
+    });
 }
 
-let stocks = Stocks();
 
-console.log(stocks);
 
 
 function main() {
-	const Vasy = new Profile({
-	username: "Ivan",
-	name: {
-		firstName: "Иван",
-		lastName: "Васильев",
-	},
-	password: "qwerty",
-	});
 
-	Vasy.createUser((err, data) => {
-        if (err) {
-                console.error('Error during creating user');
-        } else {
-                console.log(`Created new user`);
-        }});
+	const IVAN = new Profile({
+                username: 'IVAN',
+                name: { firstName: 'IVAN', lastName: 'Kulakov' },
+                password: 'password',
+});
 
-	Vasy.login({ username: Vasy.username, password: Vasy.password }, (err, data) => {
-        if (err) {
-                console.error('Error during logining user');
-        } else {
-                console.log(`User log in successfully`);
-        }});
+	const VASY = new Profile({
+                username: 'VASY',
+                name: { firstName: 'Vasy', lastName: 'Shmykov' },
+                password: 'password',
+});
 
-	Vasy.addMoney({ currency: 'RUB', amount: 100 }, (err, data) => {
-        if (err) {
-                console.error('Error during adding money to User');
-        } else {
-                console.log(`Added rubles to User`);
-        }});
-
-	Vasy.convertMoney({ fromCurrency: 'RUB', targetCurrency: 'USD', targetAmount: '1' }, (err, data) => {
-        if (err) {
-                console.error('Error during converting money');
-        } else {
-                console.log(`Money converted successfully`);
-        }});
+	getStocks((err, data) => {
+    if(err) {
+    console.error(`Error during getting stocks`);
+    } else {
+    let courses = data;
 
 
 
+		VASY.createUser((err, data) => {
+		if(err) {
+		console.error(`Error during creating ${VASY.username}`);
+		} else {
+		console.log(`${VASY.username} is created!`);
+
+			IVAN.createUser((err, data) => {
+		    if (err) {
+		    console.error(`Error during creating user`);
+		    } else {
+		    console.log(`Created user ${IVAN.username}`);
+
+		            IVAN.login((err, data) => {
+		            if(err) {
+		            console.error(`Error during logining ${IVAN.username}`);
+		            } else {
+		            console.log(`${IVAN.username} is logined!`);
+
+							IVAN.addMoney({ currency: 'RUB', amount: 100 }, (err, data) => {
+		                    if (err) {
+		                    console.error(`Error during adding money to ${IVAN.username}`);
+		                    } else {
+		                    const convertResult = courses[5].RUB_NETCOIN * data.wallet.RUB;
+		                    console.log(`Получилось: ${convertResult}`);
+		                    console.log(`Added ${data.wallet.RUB} RUB to ${IVAN.username}`);
+
+					        		IVAN.convertMoney({fromCurrency: 'RUB', targetCurrency: 'NETCOIN', targetAmount: convertResult}, (err, data) => {
+				                    if (err) {
+				                    console.error(`Error during converting money`);
+				                    } else {
+				                    const transfMoney = data.wallet.NETCOIN;
+									console.log(`Converted to NETCOIN `);
+						                    IVAN.transferMoney({to: VASY.username, amount: transfMoney}, (err, data) => {
+						                    if(err) {
+						                    console.error(`Error during transfer money`);
+						                    } else {
+						                    console.log(`Transfer NETCOINS finished`);
+
+
+				                    	}});
+				                    }});
+			                    }}); 
+		        			}});
+		    			}});
+		   			 }});
+   		}});
 }
 
 
 
 main();
+
+
 
